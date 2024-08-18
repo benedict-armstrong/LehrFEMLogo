@@ -18,6 +18,7 @@
 #include <Eigen/SparseLU>
 #include <cmath>
 #include <format>
+#include <functional>
 #include <iostream>
 #include <unsupported/Eigen/KroneckerProduct>
 
@@ -85,9 +86,10 @@ Eigen::VectorXd rhsVectorheatSource(const lf::assemble::DofHandler &dofh,
  * @returns The solution at the final timestep
  */
 /* SAM_LISTING_BEGIN_6 */
-Eigen::VectorXd solveHeatEvolution(const lf::assemble::DofHandler &dofh,
-                                   unsigned int m, double final_time,
-                                   Eigen::VectorXd initial_condition) {
+Eigen::VectorXd solveHeatEvolution(
+    const lf::assemble::DofHandler &dofh, unsigned int m, double final_time,
+    Eigen::VectorXd initial_condition,
+    std::function<void(Eigen::VectorXd, int)> recorder) {
   Eigen::VectorXd discrete_heat_sol(dofh.NumDofs());
   double tau = final_time / m;                          // step size
   const lf::uscalfe::size_type N_dofs(dofh.NumDofs());  // dim. of FE space
@@ -104,7 +106,7 @@ Eigen::VectorXd solveHeatEvolution(const lf::assemble::DofHandler &dofh,
   Eigen::VectorXd discrete_solution_cur =
       radau_solver.discreteEvolutionOperator(0.0, tau, initial_condition);
 
-  EigenCSV::writeToCSVfile("out/solution_0.csv", discrete_solution_cur);
+  recorder(discrete_solution_cur, 0);
 
   std::cout << "\n>> Iterating the action of discreteEvolutionOperator"
             << std::endl;
@@ -117,9 +119,7 @@ Eigen::VectorXd solveHeatEvolution(const lf::assemble::DofHandler &dofh,
     discrete_solution_next = radau_solver.discreteEvolutionOperator(
         i * tau, tau, discrete_solution_cur);
     discrete_solution_cur = discrete_solution_next;
-    EigenCSV::writeToCSVfile(fmt::format("out/solution_{}.csv", i),
-                             discrete_solution_cur);
-    std::cout << "timestep: " << i << "/" << m << std::endl;
+    recorder(discrete_solution_cur, i);
   }
   discrete_heat_sol = discrete_solution_cur;
   return discrete_heat_sol;

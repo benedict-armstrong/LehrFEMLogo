@@ -15,6 +15,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseLU>
+#include <functional>
 
 namespace RadauThreeTimestepping {
 
@@ -27,9 +28,10 @@ Eigen::VectorXd rhsVectorheatSource(const lf::assemble::DofHandler &dofh,
 /**
  * @brief solve heat equation with rhsVectorHeat source as source
  */
-Eigen::VectorXd solveHeatEvolution(const lf::assemble::DofHandler &dofh,
-                                   unsigned int m, double final_time,
-                                   Eigen::VectorXd initial_condition);
+Eigen::VectorXd solveHeatEvolution(
+    const lf::assemble::DofHandler &dofh, unsigned int m, double final_time,
+    Eigen::VectorXd initial_condition,
+    std::function<void(Eigen::VectorXd, int)> recorder);
 
 /**
  * @brief This function enforces Dirichlet zero boundary conditions on the

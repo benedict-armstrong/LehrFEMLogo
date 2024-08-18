@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+message("CC compiler $ENV{CC}")
+message("CXX compiler $ENV{CXX}")
+
 include("cmake/HunterGate.cmake")
 HunterGate(
     URL "https://github.com/cpp-pm/hunter/archive/v0.25.3.tar.gz"
@@ -10,8 +13,7 @@ HunterGate(
 project(lehrfem_project)
 
 message("Project source dir =" "${PROJECT_SOURCE_DIR}")
-message("Project binary dir =" "${PROJECT_BINARY_DIR}")
-
+message("Project binary dir =" "${PROJECT_BINARY_DIR}") 
 # Check that this is not an in-source build:
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
    message(SEND_ERROR "In-source builds are not allowed.")
