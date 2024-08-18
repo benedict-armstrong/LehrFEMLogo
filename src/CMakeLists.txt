@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(SOURCES
-  main.cpp
+  radauthreetimestepping_main.cc
+  radauthreetimestepping.h
+  radauthreetimestepping.cc
+  eigenCSV.h
+  eigenCSV.cc
 )
 
 set(LIBRARIES
