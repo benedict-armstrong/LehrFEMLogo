@@ -12,8 +12,6 @@ image = Image.open(image_path)
 # Convert the image to a NumPy array
 image_array = np.array(image, np.float32)
 
-# Print the shape of the image array to verify
-print('Image array shape:', image_array.shape)
 
 image_array = ((image_array / 255) - 1) * -1
 

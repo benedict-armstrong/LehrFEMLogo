@@ -21,7 +21,7 @@ for file in files:
     array = df.to_numpy()
 
     # invert image
-    array = array * 2000
+    array = array * 200
     # print(np.min(array), np.max(array))
 
     x, y = array.shape
