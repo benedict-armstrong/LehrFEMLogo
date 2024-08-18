@@ -7,36 +7,33 @@ from cmap import Colormap
 
 images = []
 
-# lut = np.asarray(imageio.imread("lut.png"), dtype=np.uint8)
-lut = np.array((
-    np.concatenate((np.zeros(127), np.arange(128))),
-    np.zeros(255),
-    np.concatenate((np.arange(-128, 0) * -1, np.zeros(127))),
-    # np.arange(-255, 0) * -1
-), dtype=np.uint8).transpose()
+lut = Colormap('bids:plasma')
+files = os.listdir("build/src/out")
 
-print(lut)
+files = list(filter(lambda x: x.endswith("csv"), files))
 
-for file in os.listdir("build/src/out"):
-    if file.endswith(".csv"):
-        df = pd.read_csv(f"build/src/out/{file}")
-        array = df.to_numpy()
+files.sort(key=lambda x: int(x.split("_")[1][:-4]))
 
-        # invert image
-        array = array * 254
+for file in files:
 
-        x, y = array.shape
+    print(file)
+    df = pd.read_csv(f"build/src/out/{file}")
+    array = df.to_numpy()
 
-        array = np.array(array, dtype=np.uint8)
-        array = np.where(array > 254, 254, array)
+    # invert image
+    array = array * 2000
+    # print(np.min(array), np.max(array))
 
-        array_colour = np.zeros((x, y, 4), dtype=np.uint8)
+    x, y = array.shape
 
-        array_colour[..., 0] = np.take(lut[..., 0], array)
-        array_colour[..., 1] = np.take(lut[..., 1], array)
-        array_colour[..., 2] = np.take(lut[..., 2], array)
-        array_colour[..., 3] = np.where(array > 30, array, 0)
+    array = np.array(array, dtype=np.uint8)
+    array = np.where(array > 254, 254, array)
 
-        images.append(array_colour)
+    array_colour = lut(array)
 
-imageio.v3.imwrite('test.gif', images, loop=True, fps=10)
+    array_colour = np.array(array_colour * 254, dtype=np.uint8)
+    array_colour[..., 3] = np.where(array > 1, array, 0)
+
+    images.append(array_colour)
+
+imageio.v3.imwrite('test.gif', images, loop=True, fps=20)

@@ -59,13 +59,15 @@ int main(int argc, char** argv) {
 
   //   Solve heat evolution with zero initial and boundary
   //       conditions
-  double final_time = 1.0;
-  unsigned int m = 30;
+  double final_time = 3.0;
+  unsigned int m = 50;
   auto rec = [m, x_dim, y_dim](Eigen::VectorXd x, int i) -> void {
     EigenCSV::writeToCSVfile(fmt::format("out/solution_{}.csv", i),
                              x.reshaped<Eigen::RowMajor>(y_dim, x_dim));
     std::cout << "timestep: " << i << "/" << m << std::endl;
   };
+
+  rec(initial_condition, -1);
 
   Eigen::VectorXd discrete_heat_solution =
       solveHeatEvolution(dofh, m, final_time, initial_condition, rec);
