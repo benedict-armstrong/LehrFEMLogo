@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d0e8049f13d66d6a24d085a4ae5e0f3f52ac6d7c003ccc79c3c5f59f65b07c6c"
+            "sha256": "cf224e3601cf1faad9da74d8d471f756831009f05ba19bd57c0930b57e78e49a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,15 @@
         ]
     },
     "default": {
+        "cmap": {
+            "hashes": [
+                "sha256:01ddd3f7b3abc42c3c126d2a590e8c03615a32be2b184ba68a69a2798f4fe460",
+                "sha256:1cafd3085c7635ab04c958b2421442c3306340f48cc8ad491087cd5fe12ddbc3"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==0.3.0"
+        },
         "contourpy": {
             "hashes": [
                 "sha256:00e5388f71c1a0610e6fe56b5c44ab7ba14165cdd6d695429c5cd94021e390b2",

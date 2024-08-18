@@ -17,7 +17,7 @@ print('Image array shape:', image_array.shape)
 
 image_array = ((image_array / 255) - 1) * -1
 
-image_array = np.where(image_array > 0.5, 10, 0)
+image_array = np.where(image_array > 0.5, 0.1, 0)
 
 # save to one large csv file
 df = pd.DataFrame(image_array.flatten())
