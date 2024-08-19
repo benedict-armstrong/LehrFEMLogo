@@ -14,7 +14,7 @@ files = list(filter(lambda x: x.endswith("csv"), files))
 
 files.sort(key=lambda x: int(x.split("_")[1][:-4]))
 
-for file in files:
+for file in list(reversed(files)):
 
     print(file)
     df = pd.read_csv(f"build/src/out/{file}")
@@ -32,8 +32,11 @@ for file in files:
     array_colour = lut(array)
 
     array_colour = np.array(array_colour * 254, dtype=np.uint8)
-    array_colour[..., 3] = np.where(array > 1, array, 0)
+    array_colour[..., 3] = np.where(array > 50, array, 0)
 
     images.append(array_colour)
 
-imageio.v3.imwrite('test.gif', images, loop=True, fps=20)
+for _ in range(3):
+    images.append(images[-1])
+
+imageio.v3.imwrite('test.gif', images, loop=True, fps=30)

@@ -1,8 +1,7 @@
 /**
  * @file radauthreetimestepping.cc
- * @brief NPDE homework RadauThreeTimestepping
- * @author Erick Schulz, edited by Oliver Rietmann
- * @date 08/04/2019
+ * @brief Based on NPDE homework RadauThreeTimestepping
+ * @author Benedict Armstrong based on work by Erick Schulz and Oliver Rietmann
  * @copyright Developed at ETH Zurich
  */
 
@@ -38,40 +37,9 @@ Eigen::VectorXd rhsVectorheatSource(const lf::assemble::DofHandler &dofh,
                                     double time) {
   // Dimension of finite element space
   const lf::uscalfe::size_type N_dofs(dofh.NumDofs());
-  // Right-hand side vector has to be set to zero initially
+
   Eigen::VectorXd phi(N_dofs);
-  // Functor for computing the source function at 2d coordinates
-  auto f = [time](Eigen::Vector2d x) -> double {
-    const double PI = 3.14159265358979323846;
-    Eigen::Vector2d v(std::cos(time * PI), std::sin(time * PI));
-    return ((x - 0.5 * v).norm() < 0.5) ? 1.0 : 0.0;
-  };
-  auto mesh_p = dofh.Mesh();  // pointer to current mesh
   phi.setZero();
-
-  /* Assembling right-hand side source vector */
-  // Initialize object taking care of local computations on all cells.
-  TrapRuleLinFEElemVecProvider<decltype(f)> elvec_builder(f);
-  // Computing right hand side vector
-  // Invoke assembly on cells (codim == 0 as first agrument)
-  lf::assemble::AssembleVectorLocally(0, dofh, elvec_builder, phi);
-
-  /* Enforce the zero Dirichlet boundary conditions */
-  // Obtain an array of boolean flags for the vertices of the mesh: 'true'
-  // indicates that the vertex lies on the boundary. This predicate will
-  // guarantee that the computations are carried only on the boundary vertices
-  auto bd_flags{lf::mesh::utils::flagEntitiesOnBoundary(mesh_p, 2)};
-
-  // Assigning zero to the boundary values of phi
-  for (const lf::mesh::Entity *vertex : mesh_p->Entities(2)) {
-    if (bd_flags(*vertex)) {
-      auto dof_idx = dofh.GlobalDofIndices(*vertex);
-      LF_ASSERT_MSG(
-          dofh.NumLocalDofs(*vertex) == 1,
-          "Too many global indices were returned for a vertex entity!");
-      phi(dof_idx[0]) = 0.0;
-    }
-  }
   return phi;
 }
 /* SAM_LISTING_END_1 */
@@ -224,9 +192,6 @@ Eigen::VectorXd Radau3MOLTimestepper::discreteEvolutionOperator(
   Eigen::VectorXd discrete_evolution_operator(dofh_.NumDofs());
   // Dimension of finite element space
   const lf::uscalfe::size_type N_dofs(dofh_.NumDofs());
-  LF_VERIFY_MSG(N_dofs == mu.size(),
-                "Dimension mismatch between the number of degrees of freedom "
-                "and the dimension of the argument vector.");
 
   // Building the linear system for the implicitely defined increments
   // Assembling the right hand side using block initialization
@@ -242,8 +207,6 @@ Eigen::VectorXd Radau3MOLTimestepper::discreteEvolutionOperator(
   // Assembling the system right hand side matrix using the (unfortunately
   // officially not supported) Eigen Kronecker product
   linSys_mat = M_Kp_ + tau * A_Kp_;
-  LF_VERIFY_MSG(linSys_mat.rows() == linSys_mat.cols(),
-                "The linSys_mat Eigen matrix is not squared.");
   Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
   solver.compute(linSys_mat);
   LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");

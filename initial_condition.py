@@ -1,4 +1,4 @@
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -16,6 +16,9 @@ image_array = np.array(image, np.float32)
 image_array = ((image_array / 255) - 1) * -1
 
 image_array = np.where(image_array > 0.2, image_array, 0)
+
+plt.imshow(image_array, cmap="gray")
+plt.show()
 
 # save to one large csv file
 df = pd.DataFrame(image_array.flatten())

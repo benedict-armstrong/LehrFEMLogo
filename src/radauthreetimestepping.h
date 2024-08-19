@@ -2,9 +2,8 @@
 #define NPDECODES_RADAUTHREETIMESTEPPING_RADAUTHREETIMESTEPPING_H_
 
 /** @file radauthreetimestepping.h
- * @brief NPDE RadauThreeTimestepping
- * @author Erick Schulz
- * @date 08/04/2019
+ * @brief Based on NPDE homework RadauThreeTimestepping
+ * @author Benedict Armstrong based on work by Erick Schulz and Oliver Rietmann
  * @copyright Developed at ETH Zurich
  */
 
@@ -34,36 +33,6 @@ Eigen::VectorXd solveHeatEvolution(
     std::function<void(Eigen::VectorXd, int)> recorder);
 
 /**
- * @brief This function enforces Dirichlet zero boundary conditions on the
- * Galerkin stiffness and mass matrices
- *
- * This function transforms every column and row
- * associated to a global index belonging to a degree of freedom lying on the
- * boundary to zero entries but the diagonal one which is set to 1.0
- *
- * @param selectvals The predicate identifying the boundary indices of the
- * rows and columns that are to be dropped
- */
-template <typename SCALAR, typename SELECTOR>
-void dropMatrixRowsColumns(SELECTOR &&selectvals,
-                           lf::assemble::COOMatrix<SCALAR> &A) {
-  const lf::assemble::size_type N(A.cols());
-  LF_ASSERT_MSG(A.rows() == N, "Matrix must be square!");
-  // Set the rows and columns of boundary DOFs to zero
-  A.setZero(
-      [&selectvals](lf::assemble::gdof_idx_t i, lf::assemble::gdof_idx_t j) {
-        return (selectvals(i) || selectvals(j));
-      });
-  // Set the diagonal entries of zeroed out rows and columns to 1
-  for (lf::assemble::gdof_idx_t dofnum = 0; dofnum < N; ++dofnum) {
-    const auto selval{selectvals(dofnum)};
-    if (selval) {
-      A.AddToEntry(dofnum, dofnum, 1.0);
-    }
-  }
-}
-
-/**
  * @brief This class implements a Lehrfem++ matrix provider defining a
  * LinFEMassMatrixProvider::Eval function returning the local MASS matrix for
  * linear first-order lagrange FE bases over triangular mesh (only!).
@@ -91,71 +60,6 @@ class LinFEMassMatrixProvider {
    **/
   Eigen::Matrix3d Eval(const lf::mesh::Entity &tria);
 };
-
-/**
- * @brief This class implements a Lehrfem++ matrix provider defining a
- * TrapRuleLinFEElemVecProvider<FUNCTOR>::Eval function returning the local
- * contribution to the element vectors for linear first-order lagrange FE bases
- * over triangular mesh (only!). Integration over the triangular cells is
- * performed using the trapezoidal rule.
- */
-/* SAM_LISTING_BEGIN_2 */
-template <typename FUNCTOR>  // lambda predicate
-class TrapRuleLinFEElemVecProvider {
- public:
-  /**
-   * @brief Constructor storing the right hand side function
-   */
-  explicit TrapRuleLinFEElemVecProvider(FUNCTOR f) : f_(f) {}
-
-  /**
-   * @brief Default implement: all cells are active
-   */
-  virtual bool isActive(const lf::mesh::Entity & /*cell*/) { return true; }
-
-  /**
-   * @brief Main method for computing the element vector
-   * @param cell current cell for which the element vector is desired
-   * @returns The element vector corresponding to the given cell
-   *
-   * The implementation uses simple vertex based quadrature and an approximation
-   * of the volume of a cell just using the integration element at the
-   * barycenter.*/
-  Eigen::Vector3d Eval(const lf::mesh::Entity &tria);
-
- private:
-  // f_ provides the evaluation of the source function at coordinates
-  FUNCTOR f_;
-};
-/* SAM_LISTING_END_2 */
-
-// Deduction guide for TrapRuleLinFEElemVecProvider
-template <typename FUNCTOR>
-TrapRuleLinFEElemVecProvider(FUNCTOR) -> TrapRuleLinFEElemVecProvider<FUNCTOR>;
-
-// TrapRuleLinFEElemVecProvider
-/* Implementing member function Eval of class TrapRuleLinFEElemVecProvider*/
-/* SAM_LISTING_BEGIN_3 */
-template <typename FUNCTOR>
-Eigen::Vector3d TrapRuleLinFEElemVecProvider<FUNCTOR>::Eval(
-    const lf::mesh::Entity &tria) {
-  Eigen::Vector3d ElemVec;
-  // Throw error in case no triangular cell
-  LF_VERIFY_MSG(tria.RefEl() == lf::base::RefEl::kTria(),
-                "Unsupported cell type " << tria.RefEl());
-  // Obtain vertex coordinates of the triangle in a 2x3 matrix
-  const auto corners{lf::geometry::Corners(*(tria.Geometry()))};
-  // Compute the scaling factor for the local load vector
-  const double area_third = lf::geometry::Volume(*(tria.Geometry())) / 3.0;
-  LF_ASSERT_MSG((corners.cols() == 3) && (corners.rows() == 2),
-                "Invalid vertex coordinate " << corners.rows() << "x"
-                                             << corners.cols() << " matrix");
-  ElemVec = Eigen::Vector3d(area_third * f_(corners.col(0)),
-                            area_third * f_(corners.col(1)),
-                            area_third * f_(corners.col(2)));
-  return ElemVec;
-}
-/* SAM_LISTING_END_3 */
 
 /**
  * @brief class providing timestepping for heat equation
